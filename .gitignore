@@ -1,0 +1,3 @@
+#Ignorar contenido carpeta data y results
+/data/
+/results/
