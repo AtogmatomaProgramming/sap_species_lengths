@@ -70,6 +70,10 @@ filter_measure_dataframe <- function(measure_ranges, fishing_ground) {
   m_stats <- m_stats[!is.na(m_stats$Down_Whisker), ]
 
   m_stats$CALADERO <- fishing_ground
+  
+  m_stats$Species <- gsub(".U", "(U)", m_stats$Species)
+  m_stats$Species <- gsub(".M", "(M)", m_stats$Species)
+  m_stats$Species <- gsub(".H", "(H)", m_stats$Species)
 
   return(m_stats)
 }
@@ -133,7 +137,9 @@ lengths_and_graphics <- function(measure_ranges, fishing_environment, result_dir
 manipulate_measure_range <- function(measure_ranges, fishing_ground) {
   fishing_ground <- as.character(fishing_ground)
 
-  measure_ranges <- measure_ranges[measure_ranges$CALADERO == fishing_ground, c("ESP_CAT", "TALLA")]
+  measure_ranges <- measure_ranges[measure_ranges$CALADERO == fishing_ground & 
+                                     measure_ranges$PROCEDENCIA == "IEO", 
+                                   c("COD_ESP_CAT", "ESP_CAT", "SEXO", "TALLA")]
 
   measure_ranges <- measure_ranges[!is.na(measure_ranges$TALLA), ]
 
