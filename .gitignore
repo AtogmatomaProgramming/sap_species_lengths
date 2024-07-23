@@ -2,5 +2,6 @@
 /data/
 /results/
 .Rproj.user
-auxiliar_script.R
+.Rhistory
 rango_tallas_historico_caladero.csv
+auxiliar_script.R
