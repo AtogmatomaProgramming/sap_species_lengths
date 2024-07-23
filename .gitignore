@@ -2,4 +2,5 @@
 /data/
 /results/
 .Rproj.user
-Draw_Box_Plot_Species_v_1_2.R
+auxiliar_script.R
+rango_tallas_historico_caladero.csv

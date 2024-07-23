@@ -2,10 +2,6 @@
 #' and the species' lengths
 
 
-#### Import libraries ####
-
-#library(ggplot2)
-
 #### a) Import working datasets ####
 
 #Define the data directory source
@@ -48,16 +44,19 @@ fishing_grounds <- fishing_grounds[!is.na(fishing_grounds)]
 plotter_function <- function(fishing_ground, 
                              measure_ranges, 
                              result_directory, 
-                             ver = "alfa",
-                             discarded_sizes = NA){
+                             ver = NA,
+                             discarded_sizes = NA,
+                             way_plot = FALSE,
+                             way_dataframe = FALSE){
   
   measure_ranges <- as.data.frame(measure_ranges)
   
   fishing_ground <- as.character(as.vector(fishing_ground))
   
   measure_ranges_filtered <- measure_ranges[measure_ranges$CALADERO == fishing_ground & 
-                                              measure_ranges$PROCEDENCIA == "IEO", 
-                                            c("COD_ESP_CAT", "ESP_CAT", "SEXO", "TALLA")]
+                                              measure_ranges$PROCEDENCIA == "IEO" &
+                                              measure_ranges$COD_TIPO_MUE == "2", 
+                                            c("COD_ESP_CAT", "ESP_CAT", "SEXO", "TALLA", "CALADERO")]
   
   measure_ranges_filtered <- measure_ranges_filtered[!is.na(measure_ranges_filtered$TALLA), ]
 
@@ -65,13 +64,15 @@ plotter_function <- function(fishing_ground,
     dplyr::group_by(ESP_CAT, SEXO) |>
     dplyr::mutate(TOTAL_TALLAS = dplyr::n_distinct(TALLA))
   
-  measure_ranges_filtered_one_measure <- measure_ranges_filtered[measure_ranges_filtered$TOTAL_TALLAS == 1, 
-                                                                    c("COD_ESP_CAT", "TOTAL_TALLAS")]
+  measure_ranges_filtered <- measure_ranges_filtered[measure_ranges_filtered$TOTAL_TALLAS != 1, ]
   
-  one_measure_specie <- unique(as.character(measure_ranges_filtered_one_measure$COD_ESP_CAT))
+  #measure_ranges_filtered_one_measure <- measure_ranges_filtered[measure_ranges_filtered$TOTAL_TALLAS != 1, 
+  #                                                                  c("COD_ESP_CAT", "TOTAL_TALLAS")]
   
-  measure_ranges_filtered <- measure_ranges_filtered[!(measure_ranges_filtered$COD_ESP_CAT %in% one_measure_specie), 
-                                                     c("COD_ESP_CAT", "ESP_CAT", "SEXO", "TALLA")]
+  #one_measure_specie <- unique(as.character(measure_ranges_filtered_one_measure$COD_ESP_CAT))
+  
+  #measure_ranges_filtered <- measure_ranges_filtered[!(measure_ranges_filtered$COD_ESP_CAT %in% one_measure_specie), 
+  #                                                   c("COD_ESP_CAT", "ESP_CAT", "SEXO", "TALLA")]
   
   measure_ranges_filtered$ESP_CAT <- paste0(measure_ranges_filtered$ESP_CAT, 
                                             "-", 
@@ -79,11 +80,13 @@ plotter_function <- function(fishing_ground,
   
   if (is.data.frame(discarded_sizes) && nrow(discarded_sizes) > 0) {
     
-    discarded_sizes[discarded_sizes$CALADERO==fishing_ground, ]
+    discarded_sizes <- discarded_sizes[discarded_sizes$CALADERO==fishing_ground, ]
     
     discarded_sizes$CALADERO <- NA
 
-    measure_ranges_filtered$ESP_CAT <- paste0(measure_ranges_filtered$ESP_CAT, "_", measure_ranges_filtered$TALLA)
+    measure_ranges_filtered$ESP_CAT <- paste0(measure_ranges_filtered$ESP_CAT, 
+                                              "_", 
+                                              measure_ranges_filtered$TALLA)
     
     discarded_sizes$ESP_CAT <- paste0(discarded_sizes$ESP_CAT, "_", discarded_sizes$TALLA)
     
@@ -97,30 +100,51 @@ plotter_function <- function(fishing_ground,
     
   }
 
-
-  plot <- ggplot2::ggplot(data = measure_ranges_filtered, ggplot2::aes(x = ESP_CAT, y = TALLA)) +
-    ggplot2::stat_boxplot(geom = "errorbar", width = 0.5) +
-    ggplot2::geom_boxplot(fill = "#4271AE", outlier.colour = "red", alpha = 0.9) +
-    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-    ggplot2::ggtitle(paste0("Distribución tallas caladero ", fishing_ground))
   
-  p <- plotly::ggplotly(plot)
-  
-  htmlwidgets::saveWidget(
-    p,
-    paste0(
-      getwd(),
-      "/",
-      result_directory,
-      "/grafico_interactivo_tallas_",
-      ver,
-      "_",
-      fishing_ground,
-      ".html"
+  if(way_plot){
+    
+    plot <- ggplot2::ggplot(data = measure_ranges_filtered, ggplot2::aes(x = ESP_CAT, y = TALLA)) +
+      ggplot2::stat_boxplot(geom = "errorbar", width = 0.5) +
+      ggplot2::geom_boxplot(fill = "#4271AE", outlier.colour = "red", alpha = 0.9) +
+      ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+      ggplot2::ggtitle(paste0("Distribución tallas caladero ", fishing_ground))
+    
+    p <- plotly::ggplotly(plot)
+    
+    htmlwidgets::saveWidget(
+      p,
+      paste0(
+        getwd(),
+        "/",
+        result_directory,
+        "/grafico_interactivo_tallas_",
+        ver,
+        "_",
+        fishing_ground,
+        ".html"
+      )
     )
-  )
-  
+    
+  }
+
+  if(way_dataframe){
+    
+    measure_ranges_filtered <- measure_ranges_filtered |> 
+      dplyr::group_by(COD_ESP_CAT, SEXO, CALADERO) |> 
+      dplyr::summarise(TALLA_MAX = max(TALLA),
+                       TALLA_MIN = min(TALLA))
+    
+    measure_ranges_filtered$COD_ESP <- measure_ranges_filtered$COD_ESP_CAT
+    
+    measure_ranges_filtered$COD_ESP_CAT <- NA
+    
+    measure_ranges_filtered <- measure_ranges_filtered[, c("COD_ESP", "CALADERO", "SEXO", "TALLA_MIN", "TALLA_MAX")]
+    
+  }
 }
+
+
+
 
 
 #### e) Plot the bloxplots for measure_ranges ####
@@ -130,11 +154,16 @@ lista_fishing_grounds <- as.list(fishing_grounds)
 lapply(lista_fishing_grounds, 
        plotter_function, 
        measure_ranges, 
-       result_directory)
+       result_directory,
+       )
+
+
+
 
 #### f) Delete the sizes that are outer the whiskers ####
 
 # Create the object with the specie and the sizes
+
 
 ##### Fishing Ground: AC #####
 
@@ -402,13 +431,29 @@ discarded_sizes <- rbind(discarded_sizes_ac,
                     discarded_sizes_gc)
 
 
+
+
 #### g) Plot again the sizes after of being filtered ####
 
-lapply(lista_fishing_grounds, function(fg) {
-     plotter_function(fg, measure_ranges, result_directory, "betha", discarded_sizes)
-   })
+
+lapply(lista_fishing_grounds, 
+       function(fg) {
+         plotter_function(fg, measure_ranges, result_directory, "betha", discarded_sizes)
+         })
 
 
+#### h) Create and export the final dataframe with the max a min sizes for the species ####
+
+historic_sizes <- lapply(lista_fishing_grounds, 
+                         function(fg) {
+                           plotter_function(fg, measure_ranges, result_directory, 
+                                            discarded_sizes, way_dataframe = TRUE)
+                         })
+
+rango_tallas_historico <- do.call(rbind.data.frame, historic_sizes)
+
+write.csv(rango_tallas_historico, 
+          "rango_tallas_historico_caladero.csv")
 
 #### Annex ####
 
