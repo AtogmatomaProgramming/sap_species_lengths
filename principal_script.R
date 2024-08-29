@@ -1,19 +1,19 @@
 
-#### SCRIPT DESCRIPTION ####
+##### SCRIPT DESCRIPTION #####
 
 #' This script is oriented to create the master data of the 
 #' historical ranges for the fishing grounds "AC", "CN" and "GC"
 #' in a range of years 
 
-#### IMPORT WORK FUNCTIONS ####
+##### IMPORT WORK FUNCTIONS #####
 
 source('functions.R')
 
-#### WORK DIRECTORIES ####
+##### WORK DIRECTORIES #####
 
 data_source <- paste0(getwd(), "/data/")
 
-result_directory <- paste0(getwd(), "results")
+result_directory <- paste0(getwd(), "/results")
 
 #' check_work_directories: function to check or create
 #' the directories that we need to work
@@ -21,7 +21,7 @@ result_directory <- paste0(getwd(), "results")
 check_work_directories(data_source, result_directory)
 
 
-#### IMPORT THE DATA SETS ####
+##### IMPORT THE DATA SETS #####
 
 #' measure_ranges: data set with the ranges of the species
 
@@ -52,21 +52,35 @@ fishing_grounds <- fishing_grounds[!is.na(fishing_grounds)]
 
 list_fishing_grounds <- as.list(fishing_grounds)
 
-#### USE OF "MAIN_FUNCTION" ####
+##### USE OF "MAIN_FUNCTION" #####
+
+#### OBTAIN DATAFRAME ####
 
 #' Create a list where we catch the values of 
 #' apply the "main_function" at the "list_fishing_ground" 
 
-ranges_list <- lapply(lista_fishing_grounds, 
+ranges_list <- lapply(list_fishing_grounds, 
        function(fg) {
          main_function(fg, measure_ranges, 
                        result_directory, way_dataframe = TRUE)
        })
 
-#### CREATE DATAFRAME ####
+#### BOXPLOT MEASURES ####
+
+lapply(list_fishing_grounds, 
+       function(fg) {main_function(fg,
+                                   measure_ranges, 
+                                   result_directory, 
+                                   ver = "prueba", 
+                                   way_plot = TRUE)
+         })
+
+
+
+##### CREATE DATAFRAME #####
 
 data_ranges <- do.call(rbind.data.frame, ranges_list)
 
-#### EXPORT FINAL DATAFRAME ####
+##### EXPORT FINAL DATAFRAME #####
 
-write.csv(data_ranges, paste0(getwd(),"/", "rango_tallas_historico_caladero_beta.csv"))
+write.csv(data_ranges, paste0(getwd(),"/", "rango_tallas_historico_caladero_beta_08.csv"))

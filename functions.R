@@ -31,18 +31,17 @@ check_work_directories <- function(data_source, result_directory){
 #' fishing grounds
 #' @param measure_ranges: dataframe with the different measures
 #' for the species
-#' @param fishing_ground: a unitary string vector with the acronym
-#' of the fishing ground
+#' @param ver: string value if you want to name the plots in another way
+#' if you are drawing more than one
 #' @param result_directory: a string value with the name of the
 #' directory where the interactive graphics will be stored
 #' @return the interactive boxplot for species according to
 #' fishing ground
 
-draw_interactive_boxplot <- function(measure_ranges, fishing_ground, result_directory) {
+draw_interactive_boxplot <- function(measure_ranges, ver, result_directory, fishing_ground) {
   
-  measure_ranges <- manipulate_measure_range(measure_ranges, fishing_ground)
 
-  plot <- ggplot2::ggplot(data = measure_ranges, aes(x = ESP_CAT, y = TALLA)) +
+  plot <- ggplot2::ggplot(data = measure_ranges, ggplot2::aes(x = ESP_CAT, y = TALLA)) +
     ggplot2::stat_boxplot(geom = "errorbar", width = 0.5) +
     ggplot2::geom_boxplot(fill = "#4271AE", outlier.colour = "red", alpha = 0.9) +
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1)) +
@@ -55,6 +54,8 @@ draw_interactive_boxplot <- function(measure_ranges, fishing_ground, result_dire
     paste0(
       result_directory,
       "/grafico_interactivo_tallas_",
+      ver,
+      "_",
       fishing_ground,
       ".html"
     )
@@ -74,6 +75,7 @@ draw_interactive_boxplot <- function(measure_ranges, fishing_ground, result_dire
 #' the lengths of the species according to the fishing grounds.
 
 filter_measure_dataframe <- function(measure_ranges, fishing_ground) {
+  
   measure_ranges <- manipulate_measure_range(measure_ranges, fishing_ground)
 
   m_graphic <- boxplot(TALLA ~ ESP_CAT, data = measure_ranges)
@@ -155,7 +157,7 @@ main_function <- function(fishing_ground,
   
   if(way_plot){
     
-    draw_interactive_boxplot(measure_ranges_filtered, fishing_ground, result_directory)
+    draw_interactive_boxplot(measure_ranges_filtered, ver, result_directory, fishing_ground)
     
   }
   
